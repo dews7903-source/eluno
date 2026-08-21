@@ -1,0 +1,8 @@
+{
+  "name": "eluno",
+  "description": "Transform Google Sheets and Excel spreadsheets into modern, interactive Kanban boards with real-time editing and sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

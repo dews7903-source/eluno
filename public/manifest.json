@@ -1,0 +1,17 @@
+{
+  "name": "eluno",
+  "short_name": "eluno",
+  "description": "Transform Google Sheets and Excel spreadsheets into modern, interactive Kanban boards with real-time editing and sync.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

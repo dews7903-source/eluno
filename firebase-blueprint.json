@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "workspaces": {
+      "title": "Workspaces",
+      "description": "Collaborative workspaces holding boards, members, and chat",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "orgName": { "type": "string" },
+        "board": { "type": "object" },
+        "members": { "type": "array" },
+        "messages": { "type": "array" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "orgName", "updatedAt"]
+    },
+    "boards": {
+      "title": "Boards",
+      "description": "Kanban boards synced with spreadsheet or standalone",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "columns": { "type": "array" },
+        "cards": { "type": "array" },
+        "labels": { "type": "array" },
+        "spreadsheetId": { "type": "string" },
+        "sheetTabName": { "type": "string" },
+        "lastSyncedAt": { "type": "string" }
+      },
+      "required": ["id", "title"]
+    },
+    "users": {
+      "title": "Users",
+      "description": "User profiles and settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "lastLogin": { "type": "string" }
+      },
+      "required": ["uid"]
+    }
+  }
+}
