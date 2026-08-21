@@ -112,6 +112,10 @@ export default function App() {
     userRef.current = user;
   }, [user]);
 
+  // Prevent echoing remote subscription updates back to Firestore
+  const isRemoteSyncRef = useRef(false);
+  const lastSyncedSignatureRef = useRef<string>('');
+
   // Load and listen to online workspace board in real-time from Firestore
   useEffect(() => {
     const targetOrg = getWorkspaceFromUrl() || userOrgProfile.orgId;
@@ -121,40 +125,72 @@ export default function App() {
     fetchOnlineWorkspace(targetOrg)
       .then((ws) => {
         if (ws && ws.board && ws.board.cards && ws.board.cards.length > 0) {
+          isRemoteSyncRef.current = true;
+          lastSyncedSignatureRef.current = JSON.stringify({
+            cards: ws.board.cards,
+            lists: ws.board.lists,
+            title: ws.board.title,
+          });
           setBoard(ws.board);
           setHasUnsavedChanges(false);
         }
       })
-      .catch((e) => console.warn('Initial online workspace sync failed:', e));
+      .catch((e) => console.warn('Initial online workspace sync note:', e));
 
     // Real-time Firestore live subscription
     const unsubscribe = subscribeToWorkspaceFromFirestore(targetOrg, (wsData) => {
       if (wsData && wsData.board && wsData.board.cards) {
-        setBoard((prev) => {
-          // Avoid overwriting if timestamps match or no changes
-          if (JSON.stringify(prev.cards) !== JSON.stringify(wsData.board?.cards)) {
-            return wsData.board as Board;
-          }
-          return prev;
+        const incomingSig = JSON.stringify({
+          cards: wsData.board.cards,
+          lists: wsData.board.lists,
+          title: wsData.board.title,
         });
+
+        if (incomingSig !== lastSyncedSignatureRef.current) {
+          isRemoteSyncRef.current = true;
+          lastSyncedSignatureRef.current = incomingSig;
+          setBoard((prev) => {
+            if (JSON.stringify(prev.cards) !== JSON.stringify(wsData.board?.cards)) {
+              return wsData.board as Board;
+            }
+            return prev;
+          });
+        }
       }
     });
 
     return () => unsubscribe();
   }, [userOrgProfile.orgId]);
 
-  // Save board to local storage & broadcast to online workspace
+  // Save board to local storage & debounced broadcast to online workspace
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(board));
     } catch (_) {}
 
-    // Debounced online sync to server
+    // If this update was triggered by an incoming remote sync, do not echo it back
+    if (isRemoteSyncRef.current) {
+      isRemoteSyncRef.current = false;
+      return;
+    }
+
+    const currentSig = JSON.stringify({
+      cards: board.cards,
+      lists: board.lists,
+      title: board.title,
+    });
+
+    if (currentSig === lastSyncedSignatureRef.current) {
+      return;
+    }
+
+    // Debounced online sync
     const timer = setTimeout(() => {
       if (userOrgProfile.orgId) {
+        lastSyncedSignatureRef.current = currentSig;
         syncBoardToOnlineWorkspace(userOrgProfile.orgId, board, userRef.current);
       }
-    }, 1200);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [board, userOrgProfile.orgId]);
